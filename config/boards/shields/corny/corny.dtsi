@@ -1,9 +1,15 @@
 #include <dt-bindings/zmk/matrix_transform.h>
+#include "corny-layouts.dtsi"
+
+// p0.10 is an nfc antenna pin by default; both halves use it as a column
+&uicr {
+    nfct-pins-as-gpios;
+};
 
 / {
     chosen {
       zmk,kscan = &kscan0;
-      zmk,matrix_transform = &default_transform;
+      zmk,physical-layout = &corny_layout;
     };
 
     default_transform: keymap_transform_0 {

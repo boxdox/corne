@@ -9,107 +9,151 @@
 #define TRI 3
 #define GAME 4
 
+#define LEFT_HAND  0 1 2 3 4 5 12 13 14 15 16 17 24 25 26 27 28 29 30
+#define RIGHT_HAND 6 7 8 9 10 11 18 19 20 21 22 23 31 32 33 34 35 36 37
+#define THUMBS     38 39 40 41 42 43
+
 / {
-        combos {
-            compatible = "zmk,combos";
-            combo_exit_game_layer {
-                timeout-ms = <50>;
-                layers = <GAME>; // only on game layer
-                key-positions = <0 11>; // top left and top right keys
-                bindings = <&tog GAME>; // toggle game layer off
-            };
+    behaviors {
+        // "timeless" homerow mods: a mod only triggers on a cross-hand
+        // press, and is skipped entirely if another key was pressed within
+        // require-prior-idle-ms, so tapping-term rarely decides anything.
+        hml: homerow_mod_left {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <280>;
+            quick-tap-ms = <175>;
+            require-prior-idle-ms = <200>;
+            hold-trigger-key-positions = <RIGHT_HAND THUMBS>;
+            hold-trigger-on-release; // needed to chord same-hand mods
+            bindings = <&kp>, <&kp>;
+            display-name = "Homerow Mod L";
         };
 
-        conditional_layers {
-            compatible = "zmk,conditional-layers";
-            tri_layer {
-                if-layers = <LOWER RAISE>;
-                then-layer = <TRI>;
-            };
+        hmr: homerow_mod_right {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <280>;
+            quick-tap-ms = <175>;
+            require-prior-idle-ms = <200>;
+            hold-trigger-key-positions = <LEFT_HAND THUMBS>;
+            hold-trigger-on-release;
+            bindings = <&kp>, <&kp>;
+            display-name = "Homerow Mod R";
         };
+    };
 
-        keymap {
-                compatible = "zmk,keymap";
+    combos {
+        compatible = "zmk,combos";
+        combo_exit_game_layer {
+            // generous window: this chord spans both halves, so the
+            // peripheral press has to travel over BLE first
+            timeout-ms = <75>;
+            layers = <GAME>; // only on game layer
+            key-positions = <0 11>; // top left and top right keys
+            bindings = <&tog GAME>; // toggle game layer off
+        };
+    };
 
-                default_layer {
+    conditional_layers {
+        compatible = "zmk,conditional-layers";
+        tri_layer {
+            if-layers = <LOWER RAISE>;
+            then-layer = <TRI>;
+        };
+    };
+
+    keymap {
+        compatible = "zmk,keymap";
+
+        default_layer {
+            display-name = "Base";
 // -------------------------------------------------------------------------------------------------
-// | ESC  |  Q  |  W  |  F  |  P  |  B  |                    |  J  |  L  |  U  |  Y  |  '  | BKSP|
-// | SHF  |  A  |  R  |  S  |  T  |  G  |                    |  M  |  N  |  E  |  I  |  O  |  ;  |
-// | CTRL |  Z  |  X  |  C  |  D  |  V  |  MUTE  |  |        |  K  |  H  |  ,  |  .  |  /  | TAB |
-//                    | GUI | LWR | SPC |                    | ENT | RSE | ALT |
-                        bindings = <
-   &kp ESC    &kp Q &kp W &kp F &kp P &kp B                   &kp J &kp L  &kp U     &kp Y   &kp APOS &kp BSPC
-   &kp LSHFT  &kp A &kp R &kp S &kp T &kp G                   &kp M &kp N  &kp E     &kp I   &kp O    &kp SEMI
-   &kp LCTRL  &kp Z &kp X &kp C &kp D &kp V &kp C_MUTE  &none &kp K &kp H  &kp COMMA &kp DOT &kp FSLH &kp TAB
-                  &kp LGUI &mo LOWER &kp SPACE                &kp RET &mo RAISE &kp LALT
-                        >;
+// | ESC  |  Q  |  W  |  E  |  R  |  T  |                    |  Y  |  U  |  I  |  O  |  P  | DEL |
+// | SHF  |  A  |  S  |  D  |  F  |  G  |                    |  H  |  J  |  K  |  L  |  ;  |  '  |
+// | CTRL |  Z  |  X  |  C  |  V  |  B  |  MUTE  |  |        |  N  |  M  |  ,  |  .  |  /  | TAB |
+//                    | TAB | LWR | SPC |                    | ENT | RSE | BSPC|
+// homerow mods (hold):  GUI  ALT  CTL  SHF          SHF  CTL  ALT  GUI
+            bindings = <
+   &kp ESC   &kp Q       &kp W       &kp E        &kp R        &kp T                      &kp Y   &kp U        &kp I        &kp O       &kp P          &kp DEL
+   &kp LSHFT &hml LGUI A &hml LALT S &hml LCTRL D &hml LSHFT F &kp G                      &kp H   &hmr RSHFT J &hmr RCTRL K &hmr RALT L &hmr RGUI SEMI &kp APOS
+   &kp LCTRL &kp Z       &kp X       &kp C        &kp V        &kp B     &kp C_MUTE &none &kp N   &kp M        &kp COMMA    &kp DOT     &kp FSLH       &kp TAB
+                                     &kp TAB      &mo LOWER    &kp SPACE                  &kp RET &mo RAISE    &kp BSPC
+            >;
 
-                        sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp PG_UP PG_DN>;
-                };
+            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp PG_UP PG_DN>;
+        };
 
-                lower_layer {
+        lower_layer {
+            display-name = "Lower";
 // ------------------------------------------------------------------------------------------------
-// |     |  1  |  2   |  3   |  4   |  5   |                    |  6  |  7  |  8  |  9  |  0  |     |
-// |     |     | NLCK | HOME | PGUP | PRSQ |                    | LFT | DWN | UP  | RGT |     |     |
-// |     |     | CLCK | END  | PGDN | SLCK |  boot  |  |        | CUT | CPY | PST |     |     |     |
+// |     |  1  |  2   |  3   |  4   |  5   |                    |  6  |  7  |  8  |  9  |  0   |     |
+// |     |     | NLCK | HOME | PGUP | PSCRN|                    | LFT | DWN | UP  | RGT | CAPSW|     |
+// |     |     | CLCK | END  | PGDN | SLCK |  boot  |  |        | CUT | CPY | PST | RPT |      |     |
 //                    |      |      |      |                    |     |     |     |
-                        bindings = <
-   &trans   &kp N1  &kp N2      &kp N3    &kp N4     &kp N5                         &kp N6    &kp N7      &kp N8       &kp N9    &kp N0  &trans
-   &trans   &trans  &kp KP_NUM  &kp HOME  &kp PG_UP  &kp PSCRN                      &kp LEFT  &kp DOWN    &kp UP       &kp RIGHT &trans  &trans
-   &trans   &trans  &kp CLCK    &kp END   &kp PG_DN  &kp SLCK   &bootloader  &none  &kp K_CUT &kp K_COPY  &kp K_PASTE  &trans    &trans  &trans
-                                &trans    &trans     &trans                         &trans    &trans      &trans
-                        >;
+            bindings = <
+   &trans &kp N1 &kp N2     &kp N3   &kp N4    &kp N5                      &kp N6    &kp N7    &kp N8    &kp N9      &kp N0     &trans
+   &trans &trans &kp KP_NUM &kp HOME &kp PG_UP &kp PSCRN                   &kp LEFT  &kp DOWN  &kp UP    &kp RIGHT   &caps_word &trans
+   &trans &trans &kp CLCK   &kp END  &kp PG_DN &kp SLCK  &bootloader &none &kp LC(X) &kp LC(C) &kp LC(V) &key_repeat &trans     &trans
+                            &trans   &trans    &trans                      &trans    &trans    &trans
+            >;
 
-                        sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp PG_UP PG_DN>;
-                };
+            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp PG_UP PG_DN>;
+        };
 
-                raise_layer {
+        raise_layer {
+            display-name = "Raise";
 // ------------------------------------------------------------------------------------------------
 // |      |  !  |  @  |  #  |  $  |  %  |                    |  ^  |  &  |  *  |  (  |  )  |     |
 // |      |  `  |  ~  |  /  |  {  |  [  |                    |  ]  |  }  |  \  |  -  |  +  |     |
 // |      |     |  '  |  "  |  ;  |  <  |        |  |  boot  |  >  |  :  | "|" |  _  |  =  |     |
 //                    |     |     |     |                    |     |     |     |
-                        bindings = <
-   &trans   &kp EXCL  &kp AT    &kp HASH &kp DLLR &kp PRCNT                    &kp CARET &kp AMPS  &kp STAR  &kp LPAR  &kp RPAR  &trans
-   &trans   &kp GRAVE &kp TILDE &kp FSLH &kp LBRC &kp LBKT                     &kp RBKT  &kp RBRC  &kp BSLH  &kp MINUS &kp PLUS  &trans
-   &trans   &trans    &kp SQT   &kp DQT  &kp SEMI &kp LT    &none  &bootloader &kp GT    &kp COLON &kp PIPE  &kp UNDER &kp EQUAL &trans
-                                &trans   &trans   &trans                       &trans    &trans    &trans
-                        >;
+            bindings = <
+   &trans &kp EXCL  &kp AT    &kp HASH &kp DLLR &kp PRCNT                   &kp CARET &kp AMPS  &kp STAR &kp LPAR  &kp RPAR  &trans
+   &trans &kp GRAVE &kp TILDE &kp FSLH &kp LBRC &kp LBKT                    &kp RBKT  &kp RBRC  &kp BSLH &kp MINUS &kp PLUS  &trans
+   &trans &trans    &kp SQT   &kp DQT  &kp SEMI &kp LT    &none &bootloader &kp GT    &kp COLON &kp PIPE &kp UNDER &kp EQUAL &trans
+                              &trans   &trans   &trans                      &trans    &trans    &trans
+            >;
 
-                        sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp PG_UP PG_DN>;
-                };
+            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp PG_UP PG_DN>;
+        };
 
-                tri_layer {
+        tri_layer {
+            display-name = "Tri";
 // ------------------------------------------------------------------------------------------------
 // | F1  | F2   | F3   | F4  | F5  | F6  |                    | F7   | F8   |  F9  | F10 | F11 |  F12 |
-// |BTCLR| BT1  | BT2  | BT3 | BT4 | BT5 |                    | PREV | PLAY | NEXT | BR- | BR+ |      |
-// |     | OUSB | OBLE |     |     |     |        |  |        | GAME |      |      |     |     |      |
+// |BTCLR| BT0  | BT1  | BT2 | BT3 | BT4 |                    | PREV | PLAY | NEXT | BR- | BR+ |      |
+// |STUDO| OUSB | OBLE |     |     |     |        |  |  boot  | GAME |      |      |     |     |      |
 //                     |     |     |     |                    |      |      |      |
-                        bindings = <
-   &kp F1     &kp F2        &kp F3       &kp F4       &kp F5       &kp F6                           &kp F7     &kp F8   &kp F9     &kp F10      &kp F11      &kp F12
-   &bt BT_CLR &bt BT_SEL 0  &bt BT_SEL 1 &bt BT_SEL 2 &bt BT_SEL 3 &bt BT_SEL 4                     &kp K_PREV &kp K_PP &kp K_NEXT &kp C_BRI_DN &kp C_BRI_UP &trans
-   &trans     &out OUT_USB  &out OUT_BLE &trans       &trans       &trans       &none  &bootloader  &tog GAME  &trans   &trans     &trans       &trans       &trans
-                                         &trans       &trans       &trans                           &trans     &trans   &trans
-                        >;
+            bindings = <
+   &kp F1         &kp F2       &kp F3       &kp F4       &kp F5       &kp F6                         &kp F7     &kp F8   &kp F9     &kp F10      &kp F11      &kp F12
+   &bt BT_CLR     &bt BT_SEL 0 &bt BT_SEL 1 &bt BT_SEL 2 &bt BT_SEL 3 &bt BT_SEL 4                   &kp K_PREV &kp K_PP &kp K_NEXT &kp C_BRI_DN &kp C_BRI_UP &trans
+   &studio_unlock &out OUT_USB &out OUT_BLE &trans       &trans       &trans       &none &bootloader &tog GAME  &trans   &trans     &trans       &trans       &trans
+                                            &trans       &trans       &trans                         &trans     &trans   &trans
+            >;
 
-                        sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp PG_UP PG_DN>;
-                };
+            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp PG_UP PG_DN>;
+        };
 
-                game_layer {
-// qwerty layer for gaming; exit by pressing ESC+BKSP
+        game_layer {
+            display-name = "Game";
+// same as base but without homerow mods, so nothing is hold-tap gated;
+// exit by pressing ESC+BKSP
 // ------------------------------------------------------------------------------------------------
 // |      |  Q  |  W  |  E  |  R  |  T  |                    |  Y  |  U   |  I  |  O  |  P  |     |
 // |      |  A  |  S  |  D  |  F  |  G  |                    |  H  |  J   |  K  |  L  |  ;  |     |
 // |      |  Z  |  X  |  C  |  V  |  B  |        |  |        |  N  |  M   |  ,  |  .  |  /  |     |
 //                    |     |     |     |                    |     |      |     |
-                        bindings = <
-   &trans  &kp Q &kp W &kp E &kp R &kp T                      &kp Y &kp U  &kp I     &kp O   &kp P    &trans
-   &trans  &kp A &kp S &kp D &kp F &kp G                      &kp H &kp J  &kp K     &kp L   &kp SEMI &trans
-   &trans  &kp Z &kp X &kp C &kp V &kp B  &kp C_MUTE   &none  &kp N &kp M  &kp COMMA &kp DOT &kp FSLH &trans
-                       &trans  &trans  &trans                 &trans  &trans  &trans
-                        >;
+            bindings = <
+   &trans &kp Q &kp W &kp E  &kp R  &kp T                   &kp Y  &kp U  &kp I     &kp O   &kp P    &trans
+   &trans &kp A &kp S &kp D  &kp F  &kp G                   &kp H  &kp J  &kp K     &kp L   &kp SEMI &trans
+   &trans &kp Z &kp X &kp C  &kp V  &kp B  &kp C_MUTE &none &kp N  &kp M  &kp COMMA &kp DOT &kp FSLH &trans
+                      &trans &trans &trans                  &trans &trans &trans
+            >;
 
-                        sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp PG_UP PG_DN>;
-                };
+            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp PG_UP PG_DN>;
         };
+    };
 };

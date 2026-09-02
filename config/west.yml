@@ -5,12 +5,15 @@ manifest:
     - name: caksoylar
       url-base: https://github.com/caksoylar
   projects:
+    # pinned to a `main` commit (zephyr 4.1 / HWMv2), no tagged release ships
+    # zephyr 4.1 yet, v0.3 is still on Zephyr 3.5
     - name: zmk
       remote: zmkfirmware
-      revision: main
+      revision: 641514a97db345f499dd50b0360e594270f008fe
       import: app/west.yml
+    # must track the same ZMK version as above
     - name: zmk-rgbled-widget
       remote: caksoylar
-      revision: main
+      revision: e6b467792a1dabef8cfa5c9fd26bfefc9c16662b
   self:
     path: config
